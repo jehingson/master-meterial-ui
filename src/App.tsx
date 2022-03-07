@@ -1,26 +1,63 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react'
+import { createTheme, CssBaseline, ThemeProvider } from '@mui/material'
+import { AppBarComponent, Sidebar, Menu } from './components'
+import { ROUTES, MAIN, BLOTTER, TRADETICKET } from './routes'
+import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Blotter, Dashboard, Tradeticket } from './feature'
+import { store } from './store'
+import { Provider } from 'react-redux'
 
-function App() {
+export const App: React.FC = (): JSX.Element => {
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>('dark')
+  const [sidebarToggle, setSidebarToggle] = useState<boolean>(false)
+  const navigate = useNavigate()
+
+  const theme = createTheme({
+    palette: {
+      mode: themeMode,
+    },
+    typography: {
+      fontSize: 14,
+    },
+  })
+
+  const handleDrawerToggle = React.useCallback(() => {
+    setSidebarToggle(!sidebarToggle)
+  }, [sidebarToggle])
+
+  const onThemeChange = React.useCallback(() => {
+    setThemeMode(themeMode === 'dark' ? 'light' : 'dark')
+  }, [themeMode])
+
+  const manuClickHandler = React.useCallback(
+    (link) => {
+      navigate(link)
+      setSidebarToggle(!sidebarToggle)
+    },
+    [navigate, sidebarToggle],
+  )
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AppBarComponent
+          handleDrawerToggle={handleDrawerToggle}
+          onThemeChange={onThemeChange}
+          isDarkMode={themeMode === 'dark'}
+          isDrawerOpen={sidebarToggle}
+        />
+        <Sidebar
+          isOpen={sidebarToggle}
+          handleDrawerToggle={handleDrawerToggle}
+          children={<Menu links={ROUTES} manuClickHandler={manuClickHandler} />}
+        />
+        <Routes>
+          <Route path={MAIN} element={<Dashboard />} />
+          <Route path={BLOTTER} element={<Blotter />} />
+          <Route path={TRADETICKET} element={<Tradeticket />} />
+        </Routes>
+      </ThemeProvider>
+    </Provider>
+  )
 }
-
-export default App;
